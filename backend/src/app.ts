@@ -7,12 +7,13 @@ import routers from './routes';
 import { errorLogger, requestLogger } from './middlewares/logger';
 import notFoundHandler from './middlewares/not-found-handler';
 import errorHandler from './middlewares/error-handler';
+import 'dotenv/config'
 
+const { PORT } = process.env;
 const app = express();
-mongoose.connect('mongodb://127.0.0.1:27017/weblarek');
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({ origin: process.env.ORIGIN_ALLOW, credentials: true }));
+app.use(express.json({ limit: '50kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(requestLogger);
@@ -24,6 +25,13 @@ app.use(errorLogger);
 app.use(errors());
 app.use(errorHandler);
 
-app.listen(3000, () => {
-  console.log('App listening on port 3000');
-});
+const bootstrap = async () => {
+  try {
+      await mongoose.connect(`${process.env.DB_ADDRESS}`)
+      app.listen(PORT, () => console.log('App listening on port '+`${PORT}`))
+  } catch (error) {
+      console.error(error)
+  }
+}
+
+bootstrap()
